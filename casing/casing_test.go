@@ -21,7 +21,7 @@ func TestGenerateCasings(t *testing.T) {
 		result := casing.GenerateCasings(input)
 		resultValues := []string{}
 		for _, v := range result {
-			resultValues = append(resultValues, v)
+			resultValues = append(resultValues, v.Value)
 		}
 		for _, expected := range expectedStrings {
 			assert.Contains(t, resultValues, expected)

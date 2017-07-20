@@ -9,9 +9,9 @@ import (
 	"github.com/jeffijoe/total-replace/util"
 )
 
-func TestListTree(t *testing.T) {
+func TestListFileNodes(t *testing.T) {
 	fixturePath := "_fixtures/fixture1/input/**/*.js"
-	result, _ := lister.Tree(util.GetWD(), fixturePath)
+	result, _ := lister.ListFileNodes(util.GetWD(), fixturePath)
 
 	containsFile(t, result, "spaces", lister.NodeTypeDir)
 	containsFile(t, result, "space-repository.js", lister.NodeTypeFile)

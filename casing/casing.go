@@ -11,7 +11,7 @@ type Casing uint8
 
 // Types of casing
 const (
-	NoMatch        = iota
+	Original       = iota
 	LowerCase      = iota
 	UpperCase      = iota
 	CamelCase      = iota
@@ -22,9 +22,18 @@ const (
 	UpperKebabCase = iota
 )
 
+// Variants contains variations of a string in different casings.
+type Variants []Variant
+
+// Variant represents a string in a different casing variant.
+type Variant struct {
+	Casing Casing
+	Value  string
+}
+
 // DetermineCasing determines a strings casing
 func DetermineCasing(s string) Casing {
-	matches := []Casing{NoMatch}
+	matches := []Casing{Original}
 	hasUnderscore := strings.Contains(s, "_")
 	hasDash := strings.Contains(s, "-")
 	if s == str.Camelize(s) {
@@ -52,6 +61,9 @@ func DetermineCasing(s string) Casing {
 		matches = append(matches, KebabCase)
 	}
 
+	// There are going to be multiple matches,
+	// the above is ordered in a way that the
+	// last match is the most specific.
 	return matches[len(matches)-1]
 }
 
@@ -60,17 +72,14 @@ func GenerateCasings(s string) Variants {
 	underscored := str.Underscore(s)
 	dasherized := str.Dasherize(s)
 	return Variants{
-		NoMatch:        s,
-		LowerCase:      strings.ToLower(s),
-		UpperCase:      strings.ToUpper(s),
-		CamelCase:      str.Camelize(s),
-		TitleCase:      str.Classify(s),
-		SnakeCase:      underscored,
-		KebabCase:      dasherized,
-		UpperSnakeCase: strings.ToUpper(underscored),
-		UpperKebabCase: strings.ToLower(dasherized),
+		Variant{Original, s},
+		Variant{LowerCase, strings.ToLower(s)},
+		Variant{UpperCase, strings.ToUpper(s)},
+		Variant{CamelCase, str.Camelize(s)},
+		Variant{TitleCase, str.Classify(s)},
+		Variant{SnakeCase, underscored},
+		Variant{KebabCase, dasherized},
+		Variant{UpperSnakeCase, strings.ToUpper(underscored)},
+		Variant{UpperKebabCase, strings.ToLower(dasherized)},
 	}
 }
-
-// Variants contains variations of a string in different casings.
-type Variants map[Casing]string
