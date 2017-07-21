@@ -4,10 +4,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/jeffijoe/total-replace/casing"
-	"github.com/jeffijoe/total-replace/lister"
-	"github.com/jeffijoe/total-replace/scanner"
-	"github.com/jeffijoe/total-replace/util"
+	"github.com/jeffijoe/total-rename/casing"
+	"github.com/jeffijoe/total-rename/lister"
+	"github.com/jeffijoe/total-rename/scanner"
+	"github.com/jeffijoe/total-rename/util"
 	"github.com/stretchr/testify/assert"
 )
 

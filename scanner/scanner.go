@@ -8,8 +8,8 @@ import (
 
 	"fmt"
 
-	"github.com/jeffijoe/total-replace/casing"
-	"github.com/jeffijoe/total-replace/lister"
+	"github.com/jeffijoe/total-rename/casing"
+	"github.com/jeffijoe/total-rename/lister"
 	"github.com/mgutz/str"
 )
 

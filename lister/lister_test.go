@@ -5,8 +5,8 @@ import (
 
 	"strings"
 
-	"github.com/jeffijoe/total-replace/lister"
-	"github.com/jeffijoe/total-replace/util"
+	"github.com/jeffijoe/total-rename/lister"
+	"github.com/jeffijoe/total-rename/util"
 )
 
 func TestListFileNodes(t *testing.T) {

@@ -1,6 +1,6 @@
-# total-replace
+# total-rename
 
-Utility to replace occurences of a string in files — content _and_ path!
+Utility to rename occurences of a string in files in the correct casing — content _and_ path!
 
 ![Under Development!](https://img.shields.io/badge/status-under%20development-lightgrey.svg)
 

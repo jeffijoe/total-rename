@@ -3,7 +3,7 @@ package casing_test
 import (
 	"testing"
 
-	"github.com/jeffijoe/total-replace/casing"
+	"github.com/jeffijoe/total-rename/casing"
 	"github.com/stretchr/testify/assert"
 )
 
