@@ -14,7 +14,7 @@ import (
 func TestScanFile(t *testing.T) {
 	test := func(file string, expectedOccurences []scanner.Occurence) {
 		occurences, err := scanner.ScanFile(
-			filepath.Join(util.GetWD(), "_fixtures", file),
+			filepath.Join(util.GetWD(), "../_fixtures", file),
 			casing.GenerateCasings("space"),
 		)
 		assert.NoError(t, err)
@@ -119,11 +119,11 @@ func TestScanFilePath(t *testing.T) {
 func TestScanFileNodes(t *testing.T) {
 	nodes := lister.FileNodes{
 		&lister.FileNode{
-			Path: filepath.Join(util.GetWD(), "_fixtures/fixture1/input/space-repository.js"),
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/space-repository.js"),
 			Type: lister.NodeTypeFile,
 		},
 		&lister.FileNode{
-			Path: filepath.Join(util.GetWD(), "_fixtures/fixture1/input/spaces"),
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/spaces"),
 			Type: lister.NodeTypeDir,
 		},
 	}
@@ -159,11 +159,11 @@ func TestScanFileNodes(t *testing.T) {
 func TestScanFileNodes_Error(t *testing.T) {
 	nodes := lister.FileNodes{
 		&lister.FileNode{
-			Path: filepath.Join(util.GetWD(), "_fixtures/fixture1/input/doesnotexist.js"),
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/doesnotexist.js"),
 			Type: lister.NodeTypeFile,
 		},
 		&lister.FileNode{
-			Path: filepath.Join(util.GetWD(), "_fixtures/fixture1/input/spaces"),
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/spaces"),
 			Type: lister.NodeTypeDir,
 		},
 	}

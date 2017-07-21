@@ -69,8 +69,8 @@ func DetermineCasing(s string) Casing {
 
 // GenerateCasings generates casings for the specified string
 func GenerateCasings(s string) Variants {
-	underscored := str.Underscore(s)
-	dasherized := str.Dasherize(s)
+	underscored := strings.Trim(str.Underscore(s), "_")
+	dasherized := strings.Trim(str.Dasherize(s), "-")
 	return Variants{
 		Variant{Original, s},
 		Variant{LowerCase, strings.ToLower(s)},
@@ -82,4 +82,18 @@ func GenerateCasings(s string) Variants {
 		Variant{UpperSnakeCase, strings.ToUpper(underscored)},
 		Variant{UpperKebabCase, strings.ToLower(dasherized)},
 	}
+}
+
+// GetVariant returns the variant for the specified casing.
+func (variants Variants) GetVariant(casing Casing) Variant {
+	var orig Variant
+	for _, v := range variants {
+		if v.Casing == casing {
+			return v
+		}
+		if v.Casing == Original {
+			orig = v
+		}
+	}
+	return orig
 }

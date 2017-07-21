@@ -10,7 +10,7 @@ import (
 )
 
 func TestListFileNodes(t *testing.T) {
-	fixturePath := "_fixtures/fixture1/input/**/*.js"
+	fixturePath := "../_fixtures/fixture1/input/**/*.js"
 	result, _ := lister.ListFileNodes(util.GetWD(), fixturePath)
 
 	containsFile(t, result, "spaces", lister.NodeTypeDir)

@@ -1,6 +1,7 @@
 package casing_test
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/jeffijoe/total-rename/casing"
@@ -29,4 +30,36 @@ func TestGenerateCasings(t *testing.T) {
 	}
 
 	test("space stuff", []string{"SPACE_STUFF", "SPACE STUFF", "space_stuff", "spaceStuff", "SpaceStuff"})
+	test("use javascript", []string{"USE_JAVASCRIPT", "USE JAVASCRIPT", "use_javascript", "useJavascript", "UseJavascript"})
+}
+
+func TestVariants_GetVariant(t *testing.T) {
+	type args struct {
+		casing casing.Casing
+	}
+	tests := []struct {
+		name     string
+		variants casing.Variants
+		args     args
+		want     casing.Variant
+	}{
+		{
+			name:     "case 1",
+			variants: casing.GenerateCasings("space"),
+			args: args{
+				casing: casing.UpperCase,
+			},
+			want: casing.Variant{
+				Value:  "SPACE",
+				Casing: casing.UpperCase,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.variants.GetVariant(tt.args.casing); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Variants.GetVariant() = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
