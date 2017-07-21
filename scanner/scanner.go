@@ -4,12 +4,24 @@ import (
 	"io/ioutil"
 	"sort"
 	"strings"
+	"sync"
 
 	"fmt"
 
 	"github.com/jeffijoe/total-replace/casing"
+	"github.com/jeffijoe/total-replace/lister"
 	"github.com/mgutz/str"
 )
+
+// OccurenceGroups is a list of occurence groups.
+type OccurenceGroups []*OccurenceGroup
+
+// OccurenceGroup is a grouping of occurences by file path and type.
+type OccurenceGroup struct {
+	Path       string
+	Occurences Occurences
+	Type       lister.NodeType
+}
 
 // Occurences is a slice of occurences.
 type Occurences []*Occurence
@@ -19,10 +31,86 @@ type Occurence struct {
 	Casing                 casing.Casing
 	Match                  string
 	StartIndex             int
-	Path                   string
 	SurroundingLinesBefore []string
 	SurroundingLinesAfter  []string
 	LineNumber             int
+}
+
+// ScanFileNodes will scan files and folders for occurences of the specified string.
+func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, error) {
+	variants := casing.GenerateCasings(needle)
+	ch := make(chan *OccurenceGroup, 20)
+	che := make(chan error)
+	wg := &sync.WaitGroup{}
+	wg.Add(len(nodes))
+	for _, node := range nodes {
+		n := node
+		go func() {
+			defer wg.Done()
+			var occurences Occurences
+			var err error
+			switch n.Type {
+			case lister.NodeTypeDir:
+				occurences = ScanFilePath(n.Path, variants)
+			case lister.NodeTypeFile:
+				occurences, err = ScanFile(n.Path, variants)
+				if err != nil {
+					che <- err
+					return
+				}
+			}
+			ch <- &OccurenceGroup{
+				Path:       n.Path,
+				Occurences: occurences,
+				Type:       n.Type,
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(ch)
+		close(che)
+	}()
+
+	for err := range che {
+		return nil, err
+	}
+
+	result := OccurenceGroups{}
+	for group := range ch {
+		result = append(result, group)
+	}
+	sort.Sort(result)
+	return result, nil
+}
+
+// ScanFilePath scans a file path name for occurences.
+func ScanFilePath(filePath string, variants casing.Variants) Occurences {
+	used := map[int]struct{}{}
+	result := Occurences{}
+	for _, variant := range variants {
+		lineOccurences := getOccurences(filePath, variant.Value)
+		if len(lineOccurences) == 0 {
+			continue
+		}
+
+		for _, startIndex := range lineOccurences {
+			if _, ok := used[startIndex]; ok {
+				continue
+			}
+
+			occurence := &Occurence{
+				Casing:     variant.Casing,
+				Match:      variant.Value,
+				StartIndex: startIndex,
+			}
+			used[startIndex] = struct{}{}
+			result = append(result, occurence)
+		}
+	}
+	sort.Sort(result)
+	return result
 }
 
 // ScanFile scans a single file and returns the occurences of the
@@ -53,7 +141,6 @@ func ScanFile(filePath string, variants casing.Variants) (Occurences, error) {
 				occurence := &Occurence{
 					Casing:                 variant.Casing,
 					Match:                  variant.Value,
-					Path:                   filePath,
 					StartIndex:             totalIndex + startIndex,
 					SurroundingLinesBefore: linesBefore,
 					SurroundingLinesAfter:  linesAfter,
@@ -125,4 +212,32 @@ func (slice Occurences) Less(i, j int) bool {
 
 func (slice Occurences) Swap(i, j int) {
 	slice[i], slice[j] = slice[j], slice[i]
+}
+
+func (slice OccurenceGroups) Len() int {
+	return len(slice)
+}
+
+func (slice OccurenceGroups) Less(i int, j int) bool {
+	return slice[i].Type < slice[j].Type
+}
+
+func (slice OccurenceGroups) Swap(i int, j int) {
+	slice[i], slice[j] = slice[j], slice[i]
+}
+
+func (g OccurenceGroup) String() string {
+	result := []string{}
+	for _, o := range g.Occurences {
+		result = append(result, "  "+o.String()+"\n")
+	}
+	return "[\n" + strings.Join(result, "\n") + "]"
+}
+
+func (slice OccurenceGroups) String() string {
+	result := []string{}
+	for _, g := range slice {
+		result = append(result, g.String()+"\n")
+	}
+	return strings.Join(result, "\n")
 }
