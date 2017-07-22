@@ -2,6 +2,7 @@ package scanner_test
 
 import (
 	"path/filepath"
+	"sort"
 	"testing"
 
 	"github.com/jeffijoe/total-rename/casing"
@@ -64,11 +65,6 @@ func TestScanFilePath(t *testing.T) {
 			args: args{filePath: "/test/space-stuff/Space.js", variants: casing.GenerateCasings("space")},
 			want: scanner.Occurences{
 				&scanner.Occurence{
-					Match:      "space",
-					Casing:     casing.Original,
-					StartIndex: 6,
-				},
-				&scanner.Occurence{
 					Match:      "Space",
 					Casing:     casing.TitleCase,
 					StartIndex: 18,
@@ -79,11 +75,6 @@ func TestScanFilePath(t *testing.T) {
 			name: "case 2",
 			args: args{filePath: "/test/api/repositories/spaces/SpaceRepository.js", variants: casing.GenerateCasings("space")},
 			want: scanner.Occurences{
-				&scanner.Occurence{
-					Match:      "space",
-					Casing:     casing.Original,
-					StartIndex: 23,
-				},
 				&scanner.Occurence{
 					Match:      "Space",
 					Casing:     casing.TitleCase,
@@ -98,6 +89,17 @@ func TestScanFilePath(t *testing.T) {
 				&scanner.Occurence{
 					Match:      "SPACE",
 					Casing:     casing.UpperCase,
+					StartIndex: 17,
+				},
+			},
+		},
+		{
+			name: "case 4",
+			args: args{filePath: "/test/api/consts/space-trip", variants: casing.GenerateCasings("Space")},
+			want: scanner.Occurences{
+				&scanner.Occurence{
+					Match:      "space",
+					Casing:     casing.LowerCase,
 					StartIndex: 17,
 				},
 			},
@@ -130,6 +132,7 @@ func TestScanFileNodes(t *testing.T) {
 
 	expectedGroups := scanner.OccurenceGroups{
 		&scanner.OccurenceGroup{
+			Type: scanner.OccurenceGroupTypeContent,
 			Occurences: scanner.Occurences{
 				&scanner.Occurence{Casing: casing.UpperCase, Match: "SPACE", LineNumber: 0},
 				&scanner.Occurence{Casing: casing.Original, Match: "space", LineNumber: 0},
@@ -139,6 +142,13 @@ func TestScanFileNodes(t *testing.T) {
 			},
 		},
 		&scanner.OccurenceGroup{
+			Type: scanner.OccurenceGroupTypePath,
+			Occurences: scanner.Occurences{
+				&scanner.Occurence{Casing: casing.Original, Match: "space", LineNumber: 0},
+			},
+		},
+		&scanner.OccurenceGroup{
+			Type: scanner.OccurenceGroupTypePath,
 			Occurences: scanner.Occurences{
 				&scanner.Occurence{Casing: casing.Original, Match: "space", LineNumber: 0},
 			},
@@ -148,6 +158,7 @@ func TestScanFileNodes(t *testing.T) {
 	assert.NoError(t, err)
 	for i, group := range result {
 		exGroup := expectedGroups[i]
+		assert.Equal(t, exGroup.Type, group.Type)
 		for j, got := range group.Occurences {
 			want := exGroup.Occurences[j]
 			assert.Equal(t, want.Casing, got.Casing)
@@ -170,4 +181,89 @@ func TestScanFileNodes_Error(t *testing.T) {
 
 	_, err := scanner.ScanFileNodes(nodes, "space")
 	assert.Error(t, err)
+}
+
+func TestSortingOccurenceGroups(t *testing.T) {
+	groups := scanner.OccurenceGroups{
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/d",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/d/f",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/c/b/d/f",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/b/c/a",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+	}
+
+	expectedOrder := []string{
+		"/root/a/b/c/d/f",
+		"/root/a/c/b/d/f",
+		"/root/a/b/c/d",
+		"/root/a/b/c",
+		"/root/b/c/a",
+	}
+
+	sort.Sort(groups)
+	for i, group := range groups {
+		assert.Equal(t, expectedOrder[i], group.Path)
+	}
+}
+
+func TestSortingOccurenceGroups_WithContent(t *testing.T) {
+	groups := scanner.OccurenceGroups{
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/file1.js",
+			Type: scanner.OccurenceGroupTypeContent,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/d",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/d/f",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/b/c/d/file2.js",
+			Type: scanner.OccurenceGroupTypeContent,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/a/c/b/d/f",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+		&scanner.OccurenceGroup{
+			Path: "/root/b/c/a",
+			Type: scanner.OccurenceGroupTypePath,
+		},
+	}
+
+	expectedOrder := []string{
+		"/root/a/b/c/d/file2.js",
+		"/root/a/b/c/file1.js",
+		"/root/a/b/c/d/f",
+		"/root/a/c/b/d/f",
+		"/root/a/b/c/d",
+		"/root/a/b/c",
+		"/root/b/c/a",
+	}
+	sort.Sort(groups)
+	for i, group := range groups {
+		assert.Equal(t, expectedOrder[i], group.Path)
+	}
 }

@@ -16,6 +16,7 @@ import (
 	"github.com/jeffijoe/total-rename/scanner"
 	"github.com/jeffijoe/total-rename/util"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReplaceText(t *testing.T) {
@@ -197,25 +198,35 @@ func TestReplaceFileContent(t *testing.T) {
 }
 
 func TestTotalRename(t *testing.T) {
+	fixtures, err := ioutil.ReadDir(filepath.Join(util.GetWD(), "../_fixtures"))
+	require.NoError(t, err)
+	for _, fixtureFI := range fixtures {
+		t.Run(fixtureFI.Name(), func(t *testing.T) {
+			testTotalRenameFixture(filepath.Join(util.GetWD(), "../_fixtures", fixtureFI.Name()), t)
+		})
+	}
+}
+
+func testTotalRenameFixture(fixturePath string, t *testing.T) {
 	tempDir := filepath.Join(
 		os.TempDir(),
 		fmt.Sprintf("%d", time.Now().Unix()),
 	)
-	fixtureInputDir, _ := filepath.Abs(filepath.Join(util.GetWD(), "../_fixtures/fixture1/input"))
+	fixtureInputDir, _ := filepath.Abs(filepath.Join(fixturePath, "input"))
 	util.CopyDir(fixtureInputDir, tempDir)
 	nodes, _ := lister.ListFileNodes(
 		tempDir,
-		"**/*.js",
+		"**/*.*",
 	)
 
 	groups, _ := scanner.ScanFileNodes(nodes, "space")
 
-	_, err := TotalRename(groups, os.Rename, ReplaceFileContent)
+	_, err := TotalRename(groups, "board", os.Rename, ReplaceFileContent)
 	assert.NoError(t, err)
-	expectedDir, _ := filepath.Abs(filepath.Join(util.GetWD(), "../_fixtures/fixture1/expected"))
+	expectedDir, _ := filepath.Abs(filepath.Join(fixturePath, "expected"))
 	expectedNodes, _ := lister.ListFileNodes(
 		expectedDir,
-		"**/*.js",
+		"**/*.*",
 	)
 
 	for _, node := range expectedNodes {
@@ -229,11 +240,9 @@ func TestTotalRename(t *testing.T) {
 				)+"/expected",
 			),
 		)
-		t.Log(node.Path)
-		t.Log(fixtureInputDir)
-		t.Log(tmpPath)
+
 		fi, err := os.Stat(tmpPath)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		if node.Type == lister.NodeTypeDir {
 			assert.True(t, fi.IsDir())
 		} else {
@@ -243,4 +252,5 @@ func TestTotalRename(t *testing.T) {
 			assert.Equal(t, expectedContent, actualContent)
 		}
 	}
+	os.RemoveAll(tempDir)
 }

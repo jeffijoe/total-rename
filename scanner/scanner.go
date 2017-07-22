@@ -8,19 +8,33 @@ import (
 
 	"fmt"
 
+	"path/filepath"
+
+	"os"
+
 	"github.com/jeffijoe/total-rename/casing"
 	"github.com/jeffijoe/total-rename/lister"
 	"github.com/mgutz/str"
 )
 
+// OccurenceGroupType determines what kind of occurence group it is.
+type OccurenceGroupType uint8
+
+// Types of occurence group types.
+const (
+	OccurenceGroupTypeContent = iota
+	OccurenceGroupTypePath    = iota
+)
+
 // OccurenceGroups is a list of occurence groups.
+// When sorted, files come first.
 type OccurenceGroups []*OccurenceGroup
 
 // OccurenceGroup is a grouping of occurences by file path and type.
 type OccurenceGroup struct {
 	Path       string
 	Occurences Occurences
-	Type       lister.NodeType
+	Type       OccurenceGroupType
 }
 
 // Occurences is a slice of occurences.
@@ -47,22 +61,27 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 		n := node
 		go func() {
 			defer wg.Done()
-			var occurences Occurences
-			var err error
-			switch n.Type {
-			case lister.NodeTypeDir:
-				occurences = ScanFilePath(n.Path, variants)
-			case lister.NodeTypeFile:
-				occurences, err = ScanFile(n.Path, variants)
+			if n.Type == lister.NodeTypeFile {
+				occurences, err := ScanFile(n.Path, variants)
 				if err != nil {
 					che <- err
 					return
 				}
+				if len(occurences) > 0 {
+					ch <- &OccurenceGroup{
+						Path:       n.Path,
+						Occurences: occurences,
+						Type:       OccurenceGroupTypeContent,
+					}
+				}
 			}
-			ch <- &OccurenceGroup{
-				Path:       n.Path,
-				Occurences: occurences,
-				Type:       n.Type,
+			pathOccurences := ScanFilePath(n.Path, variants)
+			if len(pathOccurences) > 0 {
+				ch <- &OccurenceGroup{
+					Path:       n.Path,
+					Occurences: pathOccurences,
+					Type:       OccurenceGroupTypePath,
+				}
 			}
 		}()
 	}
@@ -81,7 +100,7 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 	for group := range ch {
 		result = append(result, group)
 	}
-	sort.Sort(result)
+	sort.Stable(result)
 	return result, nil
 }
 
@@ -89,13 +108,14 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 func ScanFilePath(filePath string, variants casing.Variants) Occurences {
 	used := map[int]struct{}{}
 	result := Occurences{}
+	dirLen := len(filepath.Dir(filePath)) + 1
+	fileName := filepath.Base(filePath)
 	for _, variant := range variants {
-		lineOccurences := getOccurences(filePath, variant.Value)
-		if len(lineOccurences) == 0 {
+		occurences := getOccurences(fileName, variant.Value)
+		if len(occurences) == 0 {
 			continue
 		}
-
-		for _, startIndex := range lineOccurences {
+		for _, startIndex := range occurences {
 			if _, ok := used[startIndex]; ok {
 				continue
 			}
@@ -103,7 +123,7 @@ func ScanFilePath(filePath string, variants casing.Variants) Occurences {
 			occurence := &Occurence{
 				Casing:     variant.Casing,
 				Match:      variant.Value,
-				StartIndex: startIndex,
+				StartIndex: dirLen + startIndex,
 			}
 			used[startIndex] = struct{}{}
 			result = append(result, occurence)
@@ -219,7 +239,17 @@ func (slice OccurenceGroups) Len() int {
 }
 
 func (slice OccurenceGroups) Less(i int, j int) bool {
-	return slice[i].Type < slice[j].Type
+	left := slice[i]
+	right := slice[j]
+	if left.Type < right.Type {
+		return true
+	}
+	if left.Type > right.Type {
+		return false
+	}
+	leftPathSegmentCount := len(strings.Split(left.Path, string(os.PathSeparator)))
+	rightPathSegmentCount := len(strings.Split(right.Path, string(os.PathSeparator)))
+	return leftPathSegmentCount > rightPathSegmentCount
 }
 
 func (slice OccurenceGroups) Swap(i int, j int) {
@@ -228,10 +258,16 @@ func (slice OccurenceGroups) Swap(i int, j int) {
 
 func (g OccurenceGroup) String() string {
 	result := []string{}
+	result = append(result, "{")
+	result = append(result, "Path: "+g.Path)
+	result = append(result, "Type: "+fmt.Sprintf("%d", g.Type))
+	result = append(result, "Occurences: [")
 	for _, o := range g.Occurences {
-		result = append(result, "  "+o.String()+"\n")
+		result = append(result, "  "+o.String())
 	}
-	return "[\n" + strings.Join(result, "\n") + "]"
+	result = append(result, "]")
+	result = append(result, "}")
+	return strings.Join(result, "\n")
 }
 
 func (slice OccurenceGroups) String() string {

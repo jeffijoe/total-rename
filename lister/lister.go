@@ -30,6 +30,7 @@ type FileNode struct {
 
 // ListFileNodes lists file nodes relative from root matching the specified glob.
 func ListFileNodes(root, glob string) (FileNodes, error) {
+	root = filepath.Clean(root)
 	empty := FileNodes{}
 	path := filepath.Join(root, glob)
 	files, err := zglob.Glob(path)
@@ -37,21 +38,14 @@ func ListFileNodes(root, glob string) (FileNodes, error) {
 		return empty, err
 	}
 
-	seenFolders := make(map[string]bool)
+	seenFolders := make(map[string]struct{})
 	result := FileNodes{}
 	for _, file := range files {
 		if err != nil {
 			return empty, err
 		}
 
-		dir := filepath.Dir(file)
-		if _, prs := seenFolders[dir]; !prs {
-			seenFolders[dir] = true
-			result = append(result, &FileNode{
-				Path: dir,
-				Type: NodeTypeDir,
-			})
-		}
+		result = gatherDirectories(root, filepath.Dir(file), result, seenFolders)
 		result = append(result, &FileNode{
 			Path: file,
 			Type: NodeTypeFile,
@@ -59,6 +53,25 @@ func ListFileNodes(root, glob string) (FileNodes, error) {
 	}
 	sort.Sort(result)
 	return result, nil
+}
+
+func gatherDirectories(root, dir string, result FileNodes, seenFolders map[string]struct{}) FileNodes {
+	dir = filepath.Clean(dir)
+	for {
+		if dir == root {
+			return result
+		}
+		if _, prs := seenFolders[dir]; prs {
+			return result
+		}
+		seenFolders[dir] = struct{}{}
+		result = append(result, &FileNode{
+			Path: dir,
+			Type: NodeTypeDir,
+		})
+		dir = filepath.Clean(filepath.Dir(dir))
+	}
+	return result
 }
 
 func getNodeType(path string) (NodeType, error) {

@@ -22,10 +22,50 @@ type TotalRenameResult struct {
 }
 
 // TotalRename will rename files and paths.
-func TotalRename(groups scanner.OccurenceGroups, rename RenameFunc, replaceFile ReplaceFileFunc) (TotalRenameResult, error) {
-	return TotalRenameResult{
+func TotalRename(groups scanner.OccurenceGroups, replacement string, rename RenameFunc, replaceFile ReplaceFileFunc) (*TotalRenameResult, error) {
+	renamed := 0
+	replacementVariants := casing.GenerateCasings(replacement)
+	for _, group := range groups {
+		var count int
+		var err error
+		switch group.Type {
+		case scanner.OccurenceGroupTypeContent:
+			count, err = totalRenameFile(group, replacementVariants, replaceFile)
+		case scanner.OccurenceGroupTypePath:
+			count, err = totalRenamePath(group, replacementVariants, rename)
+		}
+		if err != nil {
+			return nil, err
+		}
+		renamed = renamed + count
+	}
+
+	return &TotalRenameResult{
 		OccurencesRenamed: 0,
 	}, nil
+}
+
+func totalRenameFile(group *scanner.OccurenceGroup, replacement casing.Variants, replaceFile ReplaceFileFunc) (int, error) {
+	contentBytes, err := ioutil.ReadFile(group.Path)
+	if err != nil {
+		return 0, err
+	}
+
+	content := string(contentBytes)
+	newContent := ReplaceText(content, group.Occurences, replacement)
+	err = replaceFile(group.Path, newContent)
+	if err != nil {
+		return 0, err
+	}
+	return len(group.Occurences), nil
+}
+
+func totalRenamePath(group *scanner.OccurenceGroup, replacement casing.Variants, rename RenameFunc) (int, error) {
+	newPath := ReplaceText(group.Path, group.Occurences, replacement)
+	if err := rename(group.Path, newPath); err != nil {
+		return 0, err
+	}
+	return len(group.Occurences), nil
 }
 
 // ReplaceText teplaces all occurences with their replacement variants

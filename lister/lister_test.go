@@ -10,16 +10,28 @@ import (
 )
 
 func TestListFileNodes(t *testing.T) {
-	fixturePath := "../_fixtures/fixture1/input/**/*.js"
+	fixturePath := "../_fixtures/fixture1/input/**/*.*"
 	result, _ := lister.ListFileNodes(util.GetWD(), fixturePath)
 
-	containsFile(t, result, "spaces", lister.NodeTypeDir)
-	containsFile(t, result, "space-repository.js", lister.NodeTypeFile)
-	containsFile(t, result, "spaceTypes.js", lister.NodeTypeFile)
-	containsFile(t, result, "SPACE_STUFFS.js", lister.NodeTypeFile)
+	contains(t, result, "spaces", lister.NodeTypeDir)
+	contains(t, result, "space-repository.js", lister.NodeTypeFile)
+	contains(t, result, "spaceTypes.js", lister.NodeTypeFile)
+	contains(t, result, "SPACE_STUFFS.js", lister.NodeTypeFile)
 }
 
-func containsFile(t *testing.T, result []*lister.FileNode, name string, nodeType lister.NodeType) {
+func TestListFileNodes_Nested(t *testing.T) {
+	fixturePath := "../_fixtures/fixture2/input/**/*.*"
+	result, _ := lister.ListFileNodes(util.GetWD(), fixturePath)
+
+	contains(t, result, "space-a", lister.NodeTypeDir)
+	contains(t, result, "SPACE-a-a", lister.NodeTypeDir)
+	contains(t, result, "get_spaces.js", lister.NodeTypeFile)
+	contains(t, result, "Spaces-b", lister.NodeTypeDir)
+	contains(t, result, "findSpaces.js", lister.NodeTypeFile)
+	contains(t, result, "to-space-we.go", lister.NodeTypeFile)
+}
+
+func contains(t *testing.T, result []*lister.FileNode, name string, nodeType lister.NodeType) {
 	for _, f := range result {
 		if strings.HasSuffix(f.Path, name) {
 			if f.Type == nodeType {
