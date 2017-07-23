@@ -23,21 +23,21 @@ func Clearable() *Wrapper {
 // Printf does what you expect.
 func (w *Wrapper) Printf(fmtString string, args ...interface{}) (int, error) {
 	str := fmt.Sprintf(fmtString, args...)
-	syncNewlines(w, str)
+	w.SyncNewlines(str)
 	return fmt.Printf(str)
 }
 
 // Print does what you expect.
 func (w *Wrapper) Print(args ...interface{}) (int, error) {
 	str := fmt.Sprint(args...)
-	syncNewlines(w, str)
+	w.SyncNewlines(str)
 	return fmt.Print(str)
 }
 
 // Println does what you expect.
 func (w *Wrapper) Println(args ...interface{}) (int, error) {
 	str := fmt.Sprintln(args...)
-	syncNewlines(w, str)
+	w.SyncNewlines(str)
 	return fmt.Printf(str)
 }
 
@@ -48,7 +48,7 @@ func (w *Wrapper) ReadLine() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	syncNewlines(w, str)
+	w.SyncNewlines(str)
 	return str, nil
 }
 
@@ -85,7 +85,8 @@ func (w *Wrapper) Confirm(defaultValue bool) (bool, error) {
 	return defaultValue, nil
 }
 
-func syncNewlines(w *Wrapper, str string) {
+// SyncNewlines increments the internal newline counter by counting newlines in the specified string.
+func (w *Wrapper) SyncNewlines(str string) {
 	nlCount := strings.Count(str, "\n")
 	w.NewlineCount = w.NewlineCount + nlCount
 }
