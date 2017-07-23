@@ -12,6 +12,8 @@ import (
 
 	"os"
 
+	"unicode/utf8"
+
 	"github.com/jeffijoe/total-rename/casing"
 	"github.com/jeffijoe/total-rename/lister"
 	"github.com/mgutz/str"
@@ -118,7 +120,7 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 func ScanFilePath(filePath string, variants casing.Variants) Occurences {
 	used := map[int]struct{}{}
 	result := Occurences{}
-	dirLen := len(filepath.Dir(filePath)) + 1
+	dirLen := utf8.RuneCountInString(filepath.Dir(filePath)) + 1
 	fileName := filepath.Base(filePath)
 	for _, variant := range variants {
 		occurences := getOccurences(fileName, variant.Value)
@@ -184,7 +186,8 @@ func ScanFile(filePath string, variants casing.Variants) (Occurences, error) {
 				result = append(result, occurence)
 			}
 		}
-		totalIndex = totalIndex + len(line) + 1
+
+		totalIndex = totalIndex + utf8.RuneCountInString(line) + 1
 	}
 	sort.Sort(result)
 	return result, nil

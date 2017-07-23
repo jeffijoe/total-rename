@@ -35,6 +35,14 @@ func TestScanFile(t *testing.T) {
 		scanner.Occurence{Casing: casing.TitleCase, Match: "Space", StartIndex: 106, LineNumber: 3},
 		scanner.Occurence{Casing: casing.TitleCase, Match: "Space", StartIndex: 133, LineNumber: 6},
 	})
+	test("fixture3/input/spaceAccessAPI.GET.spec.js", []scanner.Occurence{
+		scanner.Occurence{Casing: casing.TitleCase, Match: "Space", StartIndex: 87, LineNumber: 2},
+		scanner.Occurence{Casing: casing.TitleCase, Match: "Space", StartIndex: 115, LineNumber: 2},
+		scanner.Occurence{Casing: casing.Original, Match: "space", StartIndex: 193, LineNumber: 5},
+		scanner.Occurence{Casing: casing.Original, Match: "space", StartIndex: 452, LineNumber: 17},
+		scanner.Occurence{Casing: casing.Original, Match: "space", StartIndex: 522, LineNumber: 18},
+		scanner.Occurence{Casing: casing.TitleCase, Match: "Space", StartIndex: 845, LineNumber: 24},
+	})
 }
 
 func TestGetSurroundingLines_AtStart(t *testing.T) {

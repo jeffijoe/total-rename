@@ -175,6 +175,21 @@ func TestReplaceText(t *testing.T) {
 				replacementVariants: casing.GenerateCasings("timeSpace"),
 			},
 		},
+		{
+			name: "case 5",
+			want: "        helper.createBoard()",
+			args: args{
+				source: "        helper.createSpace()",
+				occurences: scanner.Occurences{
+					&scanner.Occurence{
+						Casing:     casing.TitleCase,
+						Match:      "Space",
+						StartIndex: 21,
+					},
+				},
+				replacementVariants: casing.GenerateCasings("board"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"unicode/utf8"
+
 	"github.com/jeffijoe/total-rename/casing"
 	"github.com/jeffijoe/total-rename/scanner"
 )
@@ -93,7 +95,7 @@ func ReplaceText(source string, occurences scanner.Occurences, replacementVarian
 			ocIdx = ocIdx + 1
 			slices = append(slices, string(buf))
 			buf = make([]rune, 0, len(source))
-			idx = idx + len(oc.Match) - 1
+			idx = idx + utf8.RuneCountInString(oc.Match) - 1
 		} else {
 			buf = append(buf, charCode)
 		}
