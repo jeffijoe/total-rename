@@ -216,7 +216,7 @@ func promptContentOccurence(occurence *scanner.Occurence, replacementVariants ca
 	color.Set(color.FgGreen)
 	w.Print(replacementVariants.GetVariant(occurence.Casing).Value)
 	color.Set(color.FgWhite)
-	w.Println("? [Y/n] ")
+	w.Print("? [Y/n] ")
 	response, err := w.Confirm(true)
 	return response, err
 }

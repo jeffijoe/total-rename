@@ -63,8 +63,10 @@ func (w *Wrapper) Clear() {
 		for i := 0; i < tmWidth; i++ {
 			fmt.Print(" ")
 		}
+
 		fmt.Print("\033[1A")
 	}
+
 	w.NewlineCount = 0
 }
 
@@ -88,5 +90,12 @@ func (w *Wrapper) Confirm(defaultValue bool) (bool, error) {
 // SyncNewlines increments the internal newline counter by counting newlines in the specified string.
 func (w *Wrapper) SyncNewlines(str string) {
 	nlCount := strings.Count(str, "\n")
+	splat := strings.Split(str, "\n")
+	width := tm.Width()
+	for _, s := range splat {
+		if len(s) > width {
+			nlCount = nlCount + 1
+		}
+	}
 	w.NewlineCount = w.NewlineCount + nlCount
 }

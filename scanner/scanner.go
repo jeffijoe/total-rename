@@ -55,8 +55,11 @@ type Occurence struct {
 // ScanFileNodes will scan files and folders for occurences of the specified string.
 func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, error) {
 	variants := casing.GenerateCasings(needle)
-	ch := make(chan *OccurenceGroup, 20)
-	che := make(chan error)
+	type chanResult struct {
+		group *OccurenceGroup
+		err   error
+	}
+	ch := make(chan *chanResult, 20)
 	wg := &sync.WaitGroup{}
 	wg.Add(len(nodes))
 	for _, node := range nodes {
@@ -66,23 +69,29 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 			if n.Type == lister.NodeTypeFile {
 				occurences, err := ScanFile(n.Path, variants)
 				if err != nil {
-					che <- err
+					ch <- &chanResult{nil, err}
 					return
 				}
 				if len(occurences) > 0 {
-					ch <- &OccurenceGroup{
-						Path:       n.Path,
-						Occurences: occurences,
-						Type:       OccurenceGroupTypeContent,
+					ch <- &chanResult{
+						&OccurenceGroup{
+							Path:       n.Path,
+							Occurences: occurences,
+							Type:       OccurenceGroupTypeContent,
+						},
+						nil,
 					}
 				}
 			}
 			pathOccurences := ScanFilePath(n.Path, variants)
 			if len(pathOccurences) > 0 {
-				ch <- &OccurenceGroup{
-					Path:       n.Path,
-					Occurences: pathOccurences,
-					Type:       OccurenceGroupTypePath,
+				ch <- &chanResult{
+					&OccurenceGroup{
+						Path:       n.Path,
+						Occurences: pathOccurences,
+						Type:       OccurenceGroupTypePath,
+					},
+					nil,
 				}
 			}
 		}()
@@ -91,17 +100,16 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 	go func() {
 		wg.Wait()
 		close(ch)
-		close(che)
 	}()
 
-	for err := range che {
-		return nil, err
+	result := OccurenceGroups{}
+	for chanRes := range ch {
+		if chanRes.err != nil {
+			return nil, chanRes.err
+		}
+		result = append(result, chanRes.group)
 	}
 
-	result := OccurenceGroups{}
-	for group := range ch {
-		result = append(result, group)
-	}
 	sort.Stable(result)
 	return result, nil
 }
