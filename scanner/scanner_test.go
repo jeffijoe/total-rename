@@ -37,7 +37,7 @@ func TestScanFile(t *testing.T) {
 	})
 }
 
-func TestGetSurroundingLines(t *testing.T) {
+func TestGetSurroundingLines_AtStart(t *testing.T) {
 	src := []string{"1", "2", "3", "4", "5", "6", "7", "8"}
 	before, after := scanner.GetSurroundingLines(
 		src,
@@ -48,6 +48,50 @@ func TestGetSurroundingLines(t *testing.T) {
 	assert.Equal(t, 2, len(after))
 	assert.Equal(t, "2", after[0])
 	assert.Equal(t, "3", after[1])
+}
+
+func TestGetSurroundingLines_AtEnd(t *testing.T) {
+	src := []string{"1", "2", "3", "4", "5", "6", "7", "8"}
+	before, after := scanner.GetSurroundingLines(
+		src,
+		7,
+		2,
+	)
+	assert.Equal(t, 2, len(before))
+	assert.Equal(t, 0, len(after))
+	assert.Equal(t, "6", before[0])
+	assert.Equal(t, "7", before[1])
+}
+
+func TestGetSurroundingLines_Middle(t *testing.T) {
+	src := []string{"1", "2", "3", "4", "5", "6", "7", "8"}
+	before, after := scanner.GetSurroundingLines(
+		src,
+		3,
+		2,
+	)
+
+	assert.Equal(t, 2, len(before))
+	assert.Equal(t, 2, len(after))
+	assert.Equal(t, "2", before[0])
+	assert.Equal(t, "3", before[1])
+	assert.Equal(t, "5", after[0])
+	assert.Equal(t, "6", after[1])
+}
+
+func TestGetSurroundingLines_AlmostStart(t *testing.T) {
+	src := []string{"1", "2", "3", "4", "5", "6", "7", "8"}
+	before, after := scanner.GetSurroundingLines(
+		src,
+		1,
+		2,
+	)
+
+	assert.Equal(t, 1, len(before))
+	assert.Equal(t, 2, len(after))
+	assert.Equal(t, "1", before[0])
+	assert.Equal(t, "3", after[0])
+	assert.Equal(t, "4", after[1])
 }
 
 func TestScanFilePath(t *testing.T) {

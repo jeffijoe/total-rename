@@ -44,7 +44,9 @@ type Occurences []*Occurence
 type Occurence struct {
 	Casing                 casing.Casing
 	Match                  string
+	Line                   string
 	StartIndex             int
+	LineStartIndex         int
 	SurroundingLinesBefore []string
 	SurroundingLinesAfter  []string
 	LineNumber             int
@@ -159,9 +161,11 @@ func ScanFile(filePath string, variants casing.Variants) (Occurences, error) {
 
 				linesBefore, linesAfter := GetSurroundingLines(lines, lineIdx, 3)
 				occurence := &Occurence{
-					Casing:                 variant.Casing,
-					Match:                  variant.Value,
-					StartIndex:             totalIndex + startIndex,
+					Casing:         variant.Casing,
+					Match:          variant.Value,
+					StartIndex:     totalIndex + startIndex,
+					LineStartIndex: startIndex,
+					Line:           line,
 					SurroundingLinesBefore: linesBefore,
 					SurroundingLinesAfter:  linesAfter,
 					LineNumber:             lineIdx,
@@ -182,8 +186,11 @@ func GetSurroundingLines(lines []string, lineIdx int, count int) (before []strin
 	before = []string{}
 	after = []string{}
 
-	for i := lineIdx - 1; ; i-- {
+	for i := lineIdx - count; ; i++ {
 		if i < 0 {
+			continue
+		}
+		if i >= lineIdx {
 			break
 		}
 		before = append(before, lines[i])

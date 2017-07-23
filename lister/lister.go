@@ -32,7 +32,12 @@ type FileNode struct {
 func ListFileNodes(root, glob string) (FileNodes, error) {
 	root = filepath.Clean(root)
 	empty := FileNodes{}
-	path := filepath.Join(root, glob)
+	var path string
+	if filepath.IsAbs(glob) {
+		path = glob
+	} else {
+		path = filepath.Join(root, glob)
+	}
 	files, err := zglob.Glob(path)
 	if err != nil {
 		return empty, err
