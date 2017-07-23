@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"strconv"
 
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"github.com/jeffijoe/total-rename/casing"
 	"github.com/jeffijoe/total-rename/cli"
 	"github.com/jeffijoe/total-rename/lister"
+	"github.com/jeffijoe/total-rename/replacer"
 	"github.com/jeffijoe/total-rename/scanner"
 	"github.com/jeffijoe/total-rename/util"
 )
@@ -26,18 +28,40 @@ func main() {
 	}
 
 	if *dryRun {
-		fmt.Println("Dry run active, won't rename anything.")
+		fmt.Println("--dry active; won't rename anything.")
 	}
 
 	if *force {
-		fmt.Println("Not gonna ask for permission")
+		fmt.Println("--force active; won't ask for permission")
 	}
+
 	if flag.NArg() < 3 {
 		fmt.Println("Not enough arguments, expects 3: <path> <needle> <replacement>")
 		return
 	}
-	promptOccurences(flag.Arg(0), flag.Arg(1), flag.Arg(2))
-	//tm.Flush()
+	replacement := flag.Arg(2)
+	groups, err := promptOccurences(flag.Arg(0), flag.Arg(1), replacement)
+	if err != nil {
+		panic(err)
+	}
+
+	rename := os.Rename
+	replace := replacer.ReplaceFileContent
+	if *dryRun {
+		rename = func(p1, p2 string) error {
+			return nil
+		}
+		replace = func(p1, p2 string) error {
+			return nil
+		}
+	}
+
+	result, err := replacer.TotalRename(groups, replacement, rename, replace)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Done! Renamed %d occurences!", result.OccurencesRenamed)
+	fmt.Println()
 }
 
 func promptOccurences(path, needle, replacement string) (scanner.OccurenceGroups, error) {
@@ -55,9 +79,9 @@ func promptOccurences(path, needle, replacement string) (scanner.OccurenceGroups
 		var newGroup *scanner.OccurenceGroup
 		switch group.Type {
 		case scanner.OccurenceGroupTypeContent:
-			newGroup, err = promptContentGroup(group, replacementVariants)
-			// case scanner.OccurenceGroupTypePath:
-			// 	newGroup, err = promptPathGroup(group, replacementVariants)
+			newGroup, err = promptGroup(group, replacementVariants, promptContentOccurence)
+		case scanner.OccurenceGroupTypePath:
+			newGroup, err = promptGroup(group, replacementVariants, promptPathOccurence)
 		}
 		if err != nil {
 			return nil, err
@@ -67,17 +91,19 @@ func promptOccurences(path, needle, replacement string) (scanner.OccurenceGroups
 		}
 	}
 
-	return scanner.OccurenceGroups{}, nil
+	return result, nil
 }
 
-func promptContentGroup(group *scanner.OccurenceGroup, replacementVariants casing.Variants) (*scanner.OccurenceGroup, error) {
+// OccurencePrompter is a function that prompts the user whether the occurence should be replaced or not.
+type OccurencePrompter func(occurence *scanner.Occurence, replacementVariants casing.Variants, w *cli.Wrapper) (bool, error)
+
+func promptGroup(group *scanner.OccurenceGroup, replacementVariants casing.Variants, promptOccurence OccurencePrompter) (*scanner.OccurenceGroup, error) {
 	w := cli.Clearable()
 
 	occurences := scanner.Occurences{}
 	result := &scanner.OccurenceGroup{
-		Path:       group.Path,
-		Type:       group.Type,
-		Occurences: occurences,
+		Path: group.Path,
+		Type: group.Type,
 	}
 	countReplaced := 0
 	countSkipped := 0
@@ -104,7 +130,7 @@ func promptContentGroup(group *scanner.OccurenceGroup, replacementVariants casin
 	for _, oc := range group.Occurences {
 		printFileStatus(w.Printf)
 		w.Println()
-		shouldReplace, err := promptContentOccurence(oc, replacementVariants, w)
+		shouldReplace, err := promptOccurence(oc, replacementVariants, w)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +147,35 @@ func promptContentGroup(group *scanner.OccurenceGroup, replacementVariants casin
 	if len(occurences) == 0 {
 		return nil, nil
 	}
+	result.Occurences = occurences
 	return result, nil
+}
+
+func promptPathOccurence(occurence *scanner.Occurence, replacementVariants casing.Variants, w *cli.Wrapper) (bool, error) {
+	color.Set(color.FgHiBlack)
+	beforeMatch := occurence.Line[:occurence.LineStartIndex]
+	afterMatch := occurence.Line[occurence.LineStartIndex+len(occurence.Match):]
+	w.Println("Occurence in path:")
+	w.Print("   ")
+	w.Printf(beforeMatch)
+	color.Set(color.FgYellow)
+	w.Print(occurence.Match)
+	color.Set(color.FgHiBlack)
+	w.Println(afterMatch)
+
+	w.Println()
+	color.Set(color.FgWhite)
+	w.Print("Replace ")
+	color.Set(color.FgYellow)
+	w.Print(occurence.Match)
+	color.Set(color.FgWhite)
+	w.Print(" with ")
+	color.Set(color.FgGreen)
+	w.Print(replacementVariants.GetVariant(occurence.Casing).Value)
+	color.Set(color.FgWhite)
+	w.Println("? [Y/n] ")
+	response, err := w.Confirm(true)
+	return response, err
 }
 
 func promptContentOccurence(occurence *scanner.Occurence, replacementVariants casing.Variants, w *cli.Wrapper) (bool, error) {

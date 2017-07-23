@@ -123,9 +123,11 @@ func ScanFilePath(filePath string, variants casing.Variants) Occurences {
 			}
 
 			occurence := &Occurence{
-				Casing:     variant.Casing,
-				Match:      variant.Value,
-				StartIndex: dirLen + startIndex,
+				Casing:         variant.Casing,
+				Match:          variant.Value,
+				StartIndex:     dirLen + startIndex,
+				LineStartIndex: dirLen + startIndex,
+				Line:           filePath,
 			}
 			used[startIndex] = struct{}{}
 			result = append(result, occurence)

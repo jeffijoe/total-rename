@@ -41,7 +41,7 @@ func TotalRename(groups scanner.OccurenceGroups, replacement string, rename Rena
 	}
 
 	return &TotalRenameResult{
-		OccurencesRenamed: 0,
+		OccurencesRenamed: renamed,
 	}, nil
 }
 
