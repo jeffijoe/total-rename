@@ -21,7 +21,9 @@ func main() {
 	dryRun := flag.Bool("dry", false, "If set, won't rename anything.")
 	force := flag.Bool("force", false, "Replaces all occurences without asking")
 	flag.Parse()
-
+	fmt.Println("total-rename")
+	fmt.Println("Copyright © Jeff Hansen 2017 to present. All rights reserved.")
+	fmt.Println()
 	if *help {
 		printHelp()
 		return
@@ -32,15 +34,27 @@ func main() {
 	}
 
 	if *force {
-		fmt.Println("--force active; won't ask for permission")
+		fmt.Println("--force active; won't prompt for confirmation")
 	}
 
+	fmt.Println()
 	if flag.NArg() < 3 {
 		fmt.Println("Not enough arguments, expects 3: <path> <needle> <replacement>")
 		return
 	}
 	replacement := flag.Arg(2)
-	groups, err := promptOccurences(flag.Arg(0), flag.Arg(1), replacement)
+	path := flag.Arg(0)
+	needle := flag.Arg(1)
+	nodes, err := lister.ListFileNodes(util.GetWD(), path)
+	if err != nil {
+		panic(err)
+	}
+	var groups scanner.OccurenceGroups
+	if *force {
+		groups, err = scanner.ScanFileNodes(nodes, needle)
+	} else {
+		groups, err = promptOccurences(nodes, needle, replacement)
+	}
 	if err != nil {
 		panic(err)
 	}
@@ -64,11 +78,7 @@ func main() {
 	fmt.Println()
 }
 
-func promptOccurences(path, needle, replacement string) (scanner.OccurenceGroups, error) {
-	nodes, err := lister.ListFileNodes(util.GetWD(), path)
-	if err != nil {
-		return nil, err
-	}
+func promptOccurences(nodes lister.FileNodes, needle, replacement string) (scanner.OccurenceGroups, error) {
 	groups, err := scanner.ScanFileNodes(nodes, needle)
 	if err != nil {
 		return nil, err
