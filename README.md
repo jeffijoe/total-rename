@@ -5,7 +5,7 @@
   <img src="https://travis-ci.org/jeffijoe/total-rename.svg?branch=master" alt="Build Status"/>
 </p>
 <p align="center">
-  Utility to rename occurences of a string in files in the correct casing — content _and_ path!
+  Utility to rename occurences of a string in files in the correct casing — content <em>and<em> path!
 </p>
 <p align="center">
   <img src="http://i.imgur.com/3NaGKzT.png" alt="Example"/>
