@@ -16,6 +16,7 @@ import (
 
 	"github.com/jeffijoe/total-rename/casing"
 	"github.com/jeffijoe/total-rename/lister"
+	"github.com/jeffijoe/total-rename/simplematch"
 	"github.com/mgutz/str"
 )
 
@@ -55,7 +56,8 @@ type Occurence struct {
 }
 
 // ScanFileNodes will scan files and folders for occurences of the specified string.
-func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, error) {
+func ScanFileNodes(nodes lister.FileNodes, needle string, binaryPattern string) (OccurenceGroups, error) {
+	binaryIgnore := simplematch.NewMatcher(binaryPattern)
 	variants := casing.GenerateCasings(needle)
 	type chanResult struct {
 		group *OccurenceGroup
@@ -68,7 +70,7 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 		n := node
 		go func() {
 			defer wg.Done()
-			if n.Type == lister.NodeTypeFile {
+			if n.Type == lister.NodeTypeFile && !binaryIgnore.Matches(n.Path) {
 				occurences, err := ScanFile(n.Path, variants)
 				if err != nil {
 					ch <- &chanResult{nil, err}

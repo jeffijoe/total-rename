@@ -206,7 +206,7 @@ func TestScanFileNodes(t *testing.T) {
 			},
 		},
 	}
-	result, err := scanner.ScanFileNodes(nodes, "space")
+	result, err := scanner.ScanFileNodes(nodes, "space", "")
 	assert.NoError(t, err)
 	for i, group := range result {
 		exGroup := expectedGroups[i]
@@ -218,7 +218,45 @@ func TestScanFileNodes(t *testing.T) {
 		}
 	}
 }
+func TestScanFileNodes_IgnoreBinary(t *testing.T) {
+	nodes := lister.FileNodes{
+		&lister.FileNode{
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/.dotfolder/spaces/space-stuff.js"),
+			Type: lister.NodeTypeFile,
+		},
+		&lister.FileNode{
+			Path: filepath.Join(util.GetWD(), "../_fixtures/fixture1/input/.dotfolder/spaces"),
+			Type: lister.NodeTypeDir,
+		},
+	}
 
+	expectedGroups := scanner.OccurenceGroups{
+		&scanner.OccurenceGroup{
+			Type: scanner.OccurenceGroupTypePath,
+			Occurences: scanner.Occurences{
+				&scanner.Occurence{Casing: casing.Original, Match: "space", LineNumber: 0},
+			},
+		},
+		&scanner.OccurenceGroup{
+			Type: scanner.OccurenceGroupTypePath,
+			Occurences: scanner.Occurences{
+				&scanner.Occurence{Casing: casing.Original, Match: "space", LineNumber: 0},
+			},
+		},
+	}
+	result, err := scanner.ScanFileNodes(nodes, "space", ".dotfolder")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(result))
+	for i, group := range result {
+		exGroup := expectedGroups[i]
+		assert.Equal(t, exGroup.Type, group.Type)
+		for j, got := range group.Occurences {
+			want := exGroup.Occurences[j]
+			assert.Equal(t, want.Casing, got.Casing)
+			assert.Equal(t, want.Match, got.Match)
+		}
+	}
+}
 func TestScanFileNodes_Error(t *testing.T) {
 	nodes := lister.FileNodes{
 		&lister.FileNode{
@@ -231,7 +269,7 @@ func TestScanFileNodes_Error(t *testing.T) {
 		},
 	}
 
-	_, err := scanner.ScanFileNodes(nodes, "space")
+	_, err := scanner.ScanFileNodes(nodes, "space", "")
 	assert.Error(t, err)
 }
 

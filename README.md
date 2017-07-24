@@ -31,6 +31,9 @@ OPTIONS:
     Options must be specified before arguments.
 
     --dry         If set, won't rename anything
+    --binary      A | separated string of path segments where contents
+                  should not be examined.
+    --ignore      A | separated string of path segments to completely ignore
     --force       Replaces all occurences without asking
     --help        Shows this help text
 
@@ -57,6 +60,13 @@ EXAMPLE:
 
     Like the first example, but from an absolute path, and match all
     file extensions and don't ask for confirmation for each occurence.
+
+EXAMPLE:
+
+    total-rename --ignore ".git/|dist/" --binary ".jpg|.jpeg|.png" "/Users/jeff/projects/my-app/src/**/*.*" "awesome" "excellent"
+
+    Ignore anything that has .git/ or dist/ in it's path completely, and don't inspect
+    the contents of png or jpg files.
 ```
 
 # How it works

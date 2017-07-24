@@ -21,6 +21,8 @@ func main() {
 	help := flag.Bool("help", false, "Shows the help menu")
 	dryRun := flag.Bool("dry", false, "If set, won't rename anything.")
 	force := flag.Bool("force", false, "Replaces all occurences without asking")
+	binaryPattern := flag.String("binary", "", "A | separated string of path segments where contents should not be examined")
+	ignorePattern := flag.String("ignore", "", "A | separated string of path segments where files/folders be ignored completely")
 	flag.Parse()
 	fmt.Println("total-rename - case-preserving renaming utility")
 	fmt.Println("Copyright © Jeff Hansen 2017 to present. All rights reserved.")
@@ -46,15 +48,15 @@ func main() {
 	replacement := flag.Arg(2)
 	path := flag.Arg(0)
 	needle := flag.Arg(1)
-	nodes, err := lister.ListFileNodes(util.GetWD(), path)
+	nodes, err := lister.ListFileNodes(util.GetWD(), path, *ignorePattern)
 	if err != nil {
 		panic(err)
 	}
 	var groups scanner.OccurenceGroups
 	if *force {
-		groups, err = scanner.ScanFileNodes(nodes, needle)
+		groups, err = scanner.ScanFileNodes(nodes, needle, *binaryPattern)
 	} else {
-		groups, err = promptOccurences(nodes, needle, replacement)
+		groups, err = promptOccurences(nodes, needle, replacement, *binaryPattern)
 	}
 	if err != nil {
 		panic(err)
@@ -79,8 +81,8 @@ func main() {
 	fmt.Println()
 }
 
-func promptOccurences(nodes lister.FileNodes, needle, replacement string) (scanner.OccurenceGroups, error) {
-	groups, err := scanner.ScanFileNodes(nodes, needle)
+func promptOccurences(nodes lister.FileNodes, needle, replacement string, binaryPattern string) (scanner.OccurenceGroups, error) {
+	groups, err := scanner.ScanFileNodes(nodes, needle, binaryPattern)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +235,9 @@ func printHelp() {
 	fmt.Println("    Options must be specified before arguments.")
 	fmt.Println("")
 	fmt.Println("    --dry         If set, won't rename anything")
+	fmt.Println("    --binary      A | separated string of path segments where contents")
+	fmt.Println("                  should not be examined.")
+	fmt.Println("    --ignore      A | separated string of path segments to completely ignore")
 	fmt.Println("    --force       Replaces all occurences without asking")
 	fmt.Println("    --help        Shows this help text")
 	fmt.Println("")
@@ -259,5 +264,12 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("    Like the first example, but from an absolute path, and match all")
 	fmt.Println("    file extensions and don't ask for confirmation for each occurence.")
+	fmt.Println("")
+	fmt.Println("EXAMPLE:")
+	fmt.Println("")
+	fmt.Println("    total-rename --ignore \".git/|dist/\" --binary \".jpg|.jpeg|.png\" \"/Users/jeff/projects/my-app/src/**/*.*\" \"awesome\" \"excellent\"")
+	fmt.Println("")
+	fmt.Println("    Ignore anything that has .git/ or dist/ in it's path completely, and don't inspect")
+	fmt.Println("    the contents of png or jpg files.")
 	fmt.Println("")
 }

@@ -232,9 +232,10 @@ func testTotalRenameFixture(fixturePath string, t *testing.T) {
 	nodes, _ := lister.ListFileNodes(
 		tempDir,
 		"**/*.*",
+		".dotfolder",
 	)
 
-	groups, _ := scanner.ScanFileNodes(nodes, "space")
+	groups, _ := scanner.ScanFileNodes(nodes, "space", ".png")
 
 	_, err := TotalRename(groups, "board", os.Rename, ReplaceFileContent)
 	assert.NoError(t, err)
@@ -242,6 +243,7 @@ func testTotalRenameFixture(fixturePath string, t *testing.T) {
 	expectedNodes, _ := lister.ListFileNodes(
 		expectedDir,
 		"**/*.*",
+		"",
 	)
 
 	for _, node := range expectedNodes {
