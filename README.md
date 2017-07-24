@@ -92,7 +92,7 @@ Things I wanted to cover in this project in order to learn Go was:
 
 **Disclaimer:** the following paragraphs describe my experience using Go, and it's not all good. **I am not saying "Go sucks!", I am just pointing out my personal disappointments as a Node/.NET developer**.
 
-I have to say, after having written this project in Go, I have a renewed appreciation for JavaScript and everything you get for free, including (but not limited to) filtering/mapping arrays, arrow functions, Promises, and the wealth of small modules available on npm.
+I have to say, after having written this project in Go, I have a renewed appreciation for JavaScript and everything you get for free, including (but not limited to) filtering/mapping arrays, arrow functions, Promises, and the wealth of small modules available on npm. Every time I had to declare a `result` array, then a `for ... range` loop that `result = append(result, ...)` just to map from 1 thing to another, a tiny piece of my soul died.
 
 I'm using macOS as my development machine, but I want to target Windows and Linux as well, so it's awesome that Go supports cross compilation! :+1: `goreleaser` makes this even better by managing everything related to building for different OS'es and architectures.
 
