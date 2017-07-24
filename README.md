@@ -94,17 +94,21 @@ Things I wanted to cover in this project in order to learn Go was:
 
 I have to say, after having written this project in Go, I have a renewed appreciation for JavaScript and everything you get for free, including (but not limited to) filtering/mapping arrays, arrow functions, Promises, and the wealth of small modules available on npm. Every time I had to declare a `result` array, then a `for ... range` loop that `result = append(result, ...)` just to map from 1 thing to another, a tiny piece of my soul died.
 
-I'm using macOS as my development machine, but I want to target Windows and Linux as well, so it's awesome that Go supports cross compilation! :+1: `goreleaser` makes this even better by managing everything related to building for different OS'es and architectures.
+I'm using macOS as my development machine, but I want to target Windows and Linux as well, so it's awesome that Go supports cross compilation! :+1: [goreleaser] makes this even better by managing everything related to building for different OS'es and architectures.
 
 Tests run super fast, which is nice! :+1: However writing the tests was pretty weird, having to pass in `t` to `assert.X(t, ...)` felt awkward. And the output from `go test` is not very human friendly; thankfully [richgo] made it a little more readable by coloring the output.
 
-Using `go get` to manage packages is nice, but pulling the latest `master` does not seem very production-friendly to me. Sure, `master` is supposed to be stable at all costs, but humans are not perfect and accidental breaking changes slip in. It's awesome that `go get` is built in, but I think version locking is important.
+Using `go get` to grab packages is nice, but pulling the latest `master` every time does not seem very production-friendly to me. Sure, `master` is supposed to be stable at all costs, but humans are not perfect and accidental breaking changes slip in. It's awesome that `go get` is built in, but I think version locking is important.
+
+All my projects on my box reside in `~/Projects`, and my work projects in a subfolder. Being forced to put everything in `$GOPATH/src/github.com/jeffijoe/my-package` was kind of annoying. I know you _don't have to do this_, but the tooling seems to break if you deviate. Oh well. ¯\_(ツ)_/¯
 
 I was using VS Code for writing Go, and the Go extension is awesome; auto imports is nice when it works (it won't work if your code does not compile 😞).
 
 I've been used to using 2-space indentation for years - having to use 8 tabs really grinds my gears. I'm all for having a code standard enforced by the official tooling, but 8 tabs is crazy if you ask me — so much screen real-estate goes to waste. Please, at least make it 4... _spaces!_ 🙃
 
 **With all this being said,** for building performance-critical system components, I would definitely consider using Go! While the syntax is lacking, such as arrow funcs, more type inference, and basic functional programming things like array `map`, `filter` and `reduce`, the performance is great and goroutines + channels + `sync.WaitGroup` is awesome!
+
+If you're a Go expert and think my code sucks and could have been written in a better way, [tell me!](https://twitter.com/jeffijoe) I'd love to know what could be better, shorter, faster, more concise and prettier to look at. 😀
 
 # Author
 
@@ -113,3 +117,4 @@ Jeff Hansen - [@Jeffijoe](https://twitter.com/Jeffijoe)
   [Releases]: https://github.com/jeffijoe/total-rename/releases
   [screenshot]: http://i.imgur.com/3NaGKzT.png
   [richgo]: https://github.com/kyoh86/richgo
+  [goreleaser]: https://github.com/goreleaser/goreleaser
