@@ -30,13 +30,13 @@ type FileNode struct {
 
 // ListFileNodes lists file nodes relative from root matching the specified glob.
 func ListFileNodes(root, glob string) (FileNodes, error) {
-	root = filepath.Clean(root)
+	root = filepath.Clean(filepath.FromSlash(root))
 	empty := FileNodes{}
 	var path string
 	if filepath.IsAbs(glob) {
 		path = glob
 	} else {
-		path = filepath.Join(root, glob)
+		path = filepath.FromSlash(filepath.Join(root, glob))
 	}
 	files, err := zglob.Glob(path)
 	if err != nil {
@@ -52,7 +52,7 @@ func ListFileNodes(root, glob string) (FileNodes, error) {
 
 		result = gatherDirectories(root, filepath.Dir(file), result, seenFolders)
 		result = append(result, &FileNode{
-			Path: file,
+			Path: filepath.FromSlash(file),
 			Type: NodeTypeFile,
 		})
 	}
@@ -71,7 +71,7 @@ func gatherDirectories(root, dir string, result FileNodes, seenFolders map[strin
 		}
 		seenFolders[dir] = struct{}{}
 		result = append(result, &FileNode{
-			Path: dir,
+			Path: filepath.FromSlash(dir),
 			Type: NodeTypeDir,
 		})
 		dir = filepath.Clean(filepath.Dir(dir))

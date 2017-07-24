@@ -14,11 +14,13 @@ func GetWD() string {
 		panic(err)
 	}
 
-	return dir
+	return filepath.FromSlash(dir)
 }
 
 // CopyDir copies a directory
 func CopyDir(source, target string) error {
+	source = filepath.FromSlash(source)
+	target = filepath.FromSlash(target)
 	return filepath.Walk(source, func(dir string, fi os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -49,6 +51,8 @@ func CopyDir(source, target string) error {
 
 // CopyFile copies file source to destination dest.
 func CopyFile(source string, dest string) (err error) {
+	source = filepath.FromSlash(source)
+	dest = filepath.FromSlash(dest)
 	sf, err := os.Open(source)
 	if err != nil {
 		return err

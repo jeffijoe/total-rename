@@ -251,8 +251,8 @@ func testTotalRenameFixture(fixturePath string, t *testing.T) {
 				node.Path,
 				strings.TrimSuffix(
 					fixtureInputDir,
-					"/input",
-				)+"/expected",
+					filepath.FromSlash("/input"),
+				)+filepath.FromSlash("/expected"),
 			),
 		)
 

@@ -77,7 +77,7 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 				if len(occurences) > 0 {
 					ch <- &chanResult{
 						&OccurenceGroup{
-							Path:       n.Path,
+							Path:       filepath.FromSlash(n.Path),
 							Occurences: occurences,
 							Type:       OccurenceGroupTypeContent,
 						},
@@ -89,7 +89,7 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 			if len(pathOccurences) > 0 {
 				ch <- &chanResult{
 					&OccurenceGroup{
-						Path:       n.Path,
+						Path:       filepath.FromSlash(n.Path),
 						Occurences: pathOccurences,
 						Type:       OccurenceGroupTypePath,
 					},
@@ -118,9 +118,10 @@ func ScanFileNodes(nodes lister.FileNodes, needle string) (OccurenceGroups, erro
 
 // ScanFilePath scans a file path name for occurences.
 func ScanFilePath(filePath string, variants casing.Variants) Occurences {
+	filePath = filepath.FromSlash(filePath)
 	used := map[int]struct{}{}
 	result := Occurences{}
-	dirLen := utf8.RuneCountInString(filepath.Dir(filePath)) + 1
+	dirLen := utf8.RuneCountInString(filepath.Dir(filePath) + string(os.PathSeparator))
 	fileName := filepath.Base(filePath)
 	for _, variant := range variants {
 		occurences := getOccurences(fileName, variant.Value)
@@ -150,12 +151,14 @@ func ScanFilePath(filePath string, variants casing.Variants) Occurences {
 // ScanFile scans a single file and returns the occurences of the
 // specified variants.
 func ScanFile(filePath string, variants casing.Variants) (Occurences, error) {
+	filePath = filepath.FromSlash(filePath)
 	bytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
 
-	lines := strings.Split(string(bytes), "\n")
+	s := string(bytes)
+	lines := strings.Split(s, "\n")
 	result := Occurences{}
 	totalIndex := 0
 	for lineIdx, line := range lines {
@@ -267,8 +270,8 @@ func (slice OccurenceGroups) Less(i int, j int) bool {
 	if left.Type > right.Type {
 		return false
 	}
-	leftPathSegmentCount := len(strings.Split(left.Path, string(os.PathSeparator)))
-	rightPathSegmentCount := len(strings.Split(right.Path, string(os.PathSeparator)))
+	leftPathSegmentCount := len(strings.Split(filepath.FromSlash(left.Path), string(os.PathSeparator)))
+	rightPathSegmentCount := len(strings.Split(filepath.FromSlash(right.Path), string(os.PathSeparator)))
 	return leftPathSegmentCount > rightPathSegmentCount
 }
 

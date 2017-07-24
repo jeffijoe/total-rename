@@ -15,7 +15,7 @@ import (
 func TestScanFile(t *testing.T) {
 	test := func(file string, expectedOccurences []scanner.Occurence) {
 		occurences, err := scanner.ScanFile(
-			filepath.Join(util.GetWD(), "../_fixtures", file),
+			filepath.Join(util.GetWD(), filepath.FromSlash("../_fixtures"), filepath.FromSlash(file)),
 			casing.GenerateCasings("space"),
 		)
 		assert.NoError(t, err)
