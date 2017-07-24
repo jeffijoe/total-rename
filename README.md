@@ -2,6 +2,8 @@
 
 # total-rename
 
+![Build Status][https://travis-ci.org/jeffijoe/total-rename.svg?branch=master]
+
 Utility to rename occurences of a string in files in the correct casing — content _and_ path!
 
 ![Total Rename][screenshot]
