@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"os"
-	"strconv"
 	"runtime"
+	"strconv"
 
 	"fmt"
 
@@ -22,7 +22,7 @@ func main() {
 	dryRun := flag.Bool("dry", false, "If set, won't rename anything.")
 	force := flag.Bool("force", false, "Replaces all occurences without asking")
 	flag.Parse()
-	fmt.Println("total-rename")
+	fmt.Println("total-rename - case-preserving renaming utility")
 	fmt.Println("Copyright © Jeff Hansen 2017 to present. All rights reserved.")
 	fmt.Println()
 	if *help {
@@ -229,12 +229,21 @@ func formatLine(lineNum int, str string) string {
 }
 
 func printHelp() {
-	fmt.Println("total-rename - case-preserving renaming utility")
-	fmt.Println("")
 	fmt.Println("OPTIONS:")
-	fmt.Println("    --dry     If set, won't rename anything")
-	fmt.Println("    --force   Replaces all occurences without asking")
-	fmt.Println("    --help    Shows this help text")
+	fmt.Println("    Options must be specified before arguments.")
+	fmt.Println("")
+	fmt.Println("    --dry         If set, won't rename anything")
+	fmt.Println("    --force       Replaces all occurences without asking")
+	fmt.Println("    --help        Shows this help text")
+	fmt.Println("")
+	fmt.Println("ARGUMENTS:")
+	fmt.Println("")
+	fmt.Println("    <pattern>  Search pattern (glob). Relative to working")
+	fmt.Println("               directory unless rooted (absolute path).")
+	fmt.Println("    <find>     The string to find. If multiple words,")
+	fmt.Println("               please use camelCase.")
+	fmt.Println("    <replace>  The string to replace occurences with.")
+	fmt.Println("               If multiple words, please use camelCase.")
 	fmt.Println("")
 	fmt.Println("EXAMPLE:")
 	fmt.Println("")
@@ -246,9 +255,9 @@ func printHelp() {
 	fmt.Println("")
 	fmt.Println("EXAMPLE:")
 	fmt.Println("")
-	fmt.Println("    total-rename \"/Users/jeff/projects/my-app/src/**/*.*\" \"awesome\" \"excellent\"")
+	fmt.Println("    total-rename --force \"/Users/jeff/projects/my-app/src/**/*.*\" \"awesome\" \"excellent\"")
 	fmt.Println("")
-	fmt.Println("    Like the first example, but from an absolute path, and match")
-	fmt.Println("    all file extensions.")
+	fmt.Println("    Like the first example, but from an absolute path, and match all")
+	fmt.Println("    file extensions and don't ask for confirmation for each occurence.")
 	fmt.Println("")
 }

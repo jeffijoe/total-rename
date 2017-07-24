@@ -1,0 +1,14 @@
+# .goreleaser.yml
+project_name: total-rename
+# Build customization
+builds:
+  - binary: total-rename
+    goos:
+      - windows
+      - darwin
+      - linux
+    goarch:
+      - amd64
+
+release:
+  draft: true
