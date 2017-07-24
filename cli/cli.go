@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"runtime"
 
 	tm "github.com/buger/goterm"
 )
@@ -54,6 +55,12 @@ func (w *Wrapper) ReadLine() (string, error) {
 
 // Clear will clear all written lines.
 func (w *Wrapper) Clear() {
+	// This shit won't work on Windows.
+	if runtime.GOOS == "windows" {
+		w.Println()
+		w.NewlineCount = 0
+		return
+	}
 	tmWidth := tm.Width()
 	if w.NewlineCount == 0 {
 		return

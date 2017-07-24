@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"strconv"
+	"runtime"
 
 	"fmt"
 
@@ -153,7 +154,9 @@ func promptGroup(group *scanner.OccurenceGroup, replacementVariants casing.Varia
 
 		w.Clear()
 	}
-	printFileStatus(fmt.Printf)
+	if runtime.GOOS != "windows" {
+		printFileStatus(fmt.Printf)
+	}
 	if len(occurences) == 0 {
 		return nil, nil
 	}
