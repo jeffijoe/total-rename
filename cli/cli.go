@@ -61,17 +61,12 @@ func (w *Wrapper) Clear() {
 		w.NewlineCount = 0
 		return
 	}
-	// tmWidth := tm.Width()
+
 	if w.NewlineCount == 0 {
 		return
 	}
 	for index := 0; index < w.NewlineCount; index++ {
-		// fmt.Print("\033[1A")
 		fmt.Printf("\033[2K")
-		// for i := 0; i < tmWidth; i++ {
-		// 	fmt.Print(" ")
-		// }
-
 		fmt.Print("\033[1A")
 	}
 
