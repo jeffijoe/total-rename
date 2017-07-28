@@ -6,8 +6,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-
-	tm "github.com/buger/goterm"
 )
 
 // Wrapper is a proxy around fmt so we can manage clearing lines.
@@ -93,12 +91,5 @@ func (w *Wrapper) Confirm(defaultValue bool) (bool, error) {
 // SyncNewlines increments the internal newline counter by counting newlines in the specified string.
 func (w *Wrapper) SyncNewlines(str string) {
 	nlCount := strings.Count(str, "\n")
-	splat := strings.Split(str, "\n")
-	width := tm.Width()
-	for _, s := range splat {
-		if len(s) > width {
-			nlCount = nlCount + 1
-		}
-	}
 	w.NewlineCount = w.NewlineCount + nlCount
 }
