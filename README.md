@@ -74,7 +74,7 @@ EXAMPLE:
 `total-rename` will scan every file matched by the pattern you specify, and look for every occurence 
 of the search string in every casing format. This works by taking the search string and converting it to
 different casings to search for. **The generated casings may be inaccurate depending on the input string**, and
-it would seem **the most accurate casings are generated when the input is `camelCased`.** _This also applies
+it would seem **the most accurate casings are generated when the input is `lower space cased`.** _This also applies
 to the replacement string._
 
 After having collected every occurence of the string within every file's content and path, you have the option to
