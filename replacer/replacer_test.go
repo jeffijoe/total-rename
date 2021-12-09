@@ -2,6 +2,7 @@ package replacer
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"io/ioutil"
@@ -202,7 +203,7 @@ func TestReplaceText(t *testing.T) {
 
 func TestReplaceFileContent(t *testing.T) {
 	now := time.Now().UTC().Unix()
-	file := filepath.Join(os.TempDir(), "total-rename-test-"+string(now)+".txt")
+	file := filepath.Join(os.TempDir(), "total-rename-test-"+strconv.FormatInt(now, 10)+".txt")
 	ioutil.WriteFile(file, []byte("plz"), 0644)
 	content, _ := ioutil.ReadFile(file)
 	assert.Equal(t, "plz", string(content))
